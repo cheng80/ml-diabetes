@@ -8,7 +8,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.geocoding import geocoding
-from app.model_loader import MODEL_METADATA
 from app.predictor import predict_with_model
 from app.schemas import GeocodeRequest, GeocodeResponse, PredictRequest, PredictResponse
 
@@ -41,10 +40,8 @@ def health() -> dict[str, Any]:
     local_ip = _get_local_ip()
     return {
         "status": "ok",
-        "algorithm": MODEL_METADATA.get("algorithm"),
-        "accuracy": MODEL_METADATA.get("accuracy"),
-        "auc_roc": MODEL_METADATA.get("auc_roc"),
-        "f1_score": MODEL_METADATA.get("f1_score"),
+        "model_sugar": "RandomForest (혈당 포함: 혈당, BMI, 나이, 임신횟수)",
+        "model_no_sugar": "RandomForest (혈당 미포함: BMI, 나이, 임신횟수)",
         "local_ip": local_ip,
         "suggested_url": f"http://{local_ip}:8000",
     }

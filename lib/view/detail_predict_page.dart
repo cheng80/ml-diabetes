@@ -120,7 +120,7 @@ class _DetailPredictPageState extends State<DetailPredictPage> {
       ),
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.8,
+          initialChildSize: 0.9,
           minChildSize: 0.5,
           maxChildSize: 0.95,
           expand: false,
