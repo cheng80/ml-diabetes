@@ -5,6 +5,8 @@ class Hospital {
   final String address;
   final String type;
   final String tel;
+  final double? lat;
+  final double? lng;
 
   Hospital({
     required this.name,
@@ -12,5 +14,7 @@ class Hospital {
     required this.address,
     required this.type,
     required this.tel,
+    this.lat,
+    this.lng,
   });
 }

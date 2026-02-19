@@ -49,6 +49,10 @@ dependencies:
   # 카카오(다음) 주소검색 API
   remedi_kopo: ^0.0.2
 
+  # 외부 지도 앱 연동 (길찾기)
+  map_launcher: ^3.5.0
+  flutter_svg: ^2.0.17
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

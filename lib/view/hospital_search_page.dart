@@ -4,7 +4,9 @@ import 'package:charset/charset.dart';
 import 'package:diabetes_app/config.dart';
 import 'package:diabetes_app/model/hospital.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:map_launcher/map_launcher.dart';
 import 'package:xml/xml.dart';
 
 /// 저장된 위치(lat, lng) 기준으로 주변 병원 목록을 조회하는 화면
@@ -105,6 +107,8 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
               address: _getText(node, 'dutyAddr') ?? '주소 없음',
               type: _getText(node, 'dutyDivName') ?? '분류 없음',
               tel: _getText(node, 'dutyTel1') ?? '전화번호 없음',
+              lat: double.tryParse(_getText(node, 'latitude') ?? ''),
+              lng: double.tryParse(_getText(node, 'longitude') ?? ''),
             );
           }).toList();
 
@@ -125,6 +129,74 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
     final elements = node.findElements(tagName);
     final first = elements.isNotEmpty ? elements.first : null;
     return first?.innerText;
+  }
+
+  Future<void> _openDirections(Hospital hospital) async {
+    if (hospital.lat == null || hospital.lng == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('해당 병원의 위치 정보가 없습니다.')),
+        );
+      }
+      return;
+    }
+
+    final availableMaps = await MapLauncher.installedMaps;
+
+    if (availableMaps.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('설치된 지도 앱이 없습니다.')),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  '길찾기 앱 선택',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              const Divider(height: 1),
+              ...availableMaps.map((map) {
+                return ListTile(
+                  leading: SvgPicture.asset(
+                    map.icon,
+                    width: 32,
+                    height: 32,
+                  ),
+                  title: Text(map.mapName),
+                  onTap: () {
+                    Navigator.pop(context);
+                    map.showDirections(
+                      destination: Coords(hospital.lat!, hospital.lng!),
+                      destinationTitle: hospital.name,
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -191,6 +263,17 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
                             Text('전화: ${hospital.tel}'),
                           ],
                         ),
+                        trailing: hospital.lat != null && hospital.lng != null
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.directions,
+                                  size: 36,
+                                  color: Colors.blue,
+                                ),
+                                tooltip: '길찾기',
+                                onPressed: () => _openDirections(hospital),
+                              )
+                            : null,
                         isThreeLine: true,
                       ),
                     );
