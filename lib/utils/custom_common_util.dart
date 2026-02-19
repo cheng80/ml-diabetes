@@ -902,21 +902,24 @@ class CustomCommonUtil {
       MaterialBanner(
         backgroundColor: backgroundColor,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        content: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: '$title  ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-              ),
-              TextSpan(
-                text: message,
-                style: TextStyle(color: textColor),
-              ),
-            ],
+        content: SizedBox(
+          width: double.infinity,
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$title  ',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                ),
+                TextSpan(
+                  text: message,
+                  style: TextStyle(color: textColor),
+                ),
+              ],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           TextButton(

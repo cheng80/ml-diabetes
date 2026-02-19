@@ -108,7 +108,6 @@ def create_chart_base64(
 
 def predict_with_model(
     payload: PredictRequest,
-    suffix: str = "",
 ) -> PredictResponse:
     """입력 검증 → 기본값 채움 → 정규화 → 예측 → 차트 → 응답"""
     all_input_values: dict[str, float | None] = {
@@ -167,7 +166,7 @@ def predict_with_model(
     proba = MODEL.predict_proba(X)[0]
     probability = float(proba[1])
     prediction = int(probability >= 0.5)
-    label = ("당뇨 위험" if prediction == 1 else "정상 범위") + suffix
+    label = "당뇨 위험" if prediction == 1 else "정상 범위"
 
     chart_image_base64: str | None = None
     try:

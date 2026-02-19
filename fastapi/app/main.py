@@ -56,12 +56,6 @@ def predict(payload: PredictRequest) -> PredictResponse:
     return predict_with_model(payload)
 
 
-@app.post("/predict/dummy", response_model=PredictResponse)
-def predict_dummy(payload: PredictRequest) -> PredictResponse:
-    """UI 테스트용 (라벨에 "(더미)" 붙음)"""
-    return predict_with_model(payload, suffix="(더미)")
-
-
 @app.post("/geocode", response_model=GeocodeResponse)
 def geocode_address(payload: GeocodeRequest) -> GeocodeResponse:
     """주소 → lat/lng"""
