@@ -32,6 +32,17 @@ class AppStorage {
   static Future<void> saveThemeMode(String mode) =>
       _storage.write(_keyThemeMode, mode);
 
+  // ─── API 서버 ───────────────────────────────
+  static const String _keyApiBaseUrl = 'api_base_url';
+
+  /// 사용자 지정 API 베이스 URL (null이면 플랫폼 기본값 사용)
+  static String? getApiBaseUrl() => _storage.read<String>(_keyApiBaseUrl);
+
+  static Future<void> saveApiBaseUrl(String? value) =>
+      value == null || value.trim().isEmpty
+          ? _storage.remove(_keyApiBaseUrl)
+          : _storage.write(_keyApiBaseUrl, value.trim());
+
   // ─── 주소 / 좌표 ─────────────────────────────
   static const String _keyAddress = 'saved_address';
   static const String _keyLat = 'saved_lat';

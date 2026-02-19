@@ -1,14 +1,61 @@
 import 'package:diabetes_app/theme/theme_provider.dart';
 import 'package:diabetes_app/utils/app_storage.dart';
+import 'package:diabetes_app/utils/custom_common_util.dart';
 import 'package:diabetes_app/view/address_search_page.dart';
 import 'package:diabetes_app/view/hospital_search_page.dart';
 import 'package:flutter/material.dart';
 
-// 세팅 드로워 (테마, 주소찾기, 병원찾기)
+// 세팅 드로워 (테마, API주소, 주소찾기, 병원찾기)
 class AppSettingsDrawer extends StatelessWidget {
   const AppSettingsDrawer({super.key});
 
   static const String _version = '1.0.0';
+
+  void _onApiUrlTap(BuildContext context) {
+    final ctrl = TextEditingController(
+      text: AppStorage.getApiBaseUrl() ?? '',
+    );
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('API 서버 주소'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '비우면 플랫폼 기본값 사용\n예: http://192.168.0.10:8000',
+              style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              decoration: const InputDecoration(
+                hintText: 'http://...',
+              ),
+              keyboardType: TextInputType.url,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await AppStorage.saveApiBaseUrl(ctrl.text);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('저장'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _onHospitalSearchTap(BuildContext context) {
     final hasAddress = AppStorage.getAddress() != null &&
@@ -93,6 +140,23 @@ class AppSettingsDrawer extends StatelessWidget {
               value: context.isDarkMode,
               onChanged: (_) => context.toggleTheme(),
             ),
+
+            // API 서버 주소
+            ListTile(
+              leading: const Icon(Icons.api_outlined),
+              title: const Text('API 서버 주소'),
+              subtitle: Text(
+                CustomCommonUtil.getApiBaseUrlSync(),
+                style: Theme.of(context).textTheme.bodySmall,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _onApiUrlTap(context);
+              },
+            ),
+
+            const Divider(height: 1),
 
             // 주소 찾기 메뉴
             ListTile(

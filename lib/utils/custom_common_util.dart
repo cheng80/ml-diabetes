@@ -1,4 +1,5 @@
 import 'package:diabetes_app/config.dart';
+import 'package:diabetes_app/utils/app_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
@@ -6,11 +7,12 @@ import 'dart:io' show Platform;
 // 커스텀 공용 유틸리티 클래스
 // 위젯 및 공통 기능 관련 유틸리티 함수들을 제공합니다.
 class CustomCommonUtil {
-  /// FastAPI 서버 기본 URL (동기 - 플랫폼만 체크)
-  ///
-  /// 실기기 체크 없이 플랫폼에 따라 기본값만 반환합니다.
-  /// 초기화 실패 시 대비용으로 사용됩니다.
+  /// FastAPI 서버 URL. 사용자 지정 있으면 그대로, 없으면 플랫폼 기본값
   static String getApiBaseUrlSync() {
+    final custom = AppStorage.getApiBaseUrl();
+    if (custom != null && custom.trim().isNotEmpty) {
+      return custom.trim();
+    }
     if (Platform.isAndroid) {
       return AppConfig.fastApiBaseUrlAndroid;
     }

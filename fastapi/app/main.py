@@ -1,6 +1,7 @@
 # 당뇨 예측 API 서버 (schemas, model_loader, predictor, geocoding)
 from __future__ import annotations
 
+import socket
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -22,15 +23,30 @@ app.add_middleware(
 )
 
 
+def _get_local_ip() -> str:
+    """서버 PC의 로컬 네트워크 IP (실기기 연결용)"""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
-    """서버 상태 + 모델 정보"""
+    """서버 상태 + 모델 정보 + local_ip (실기기용 URL 제안)"""
+    local_ip = _get_local_ip()
     return {
         "status": "ok",
         "algorithm": MODEL_METADATA.get("algorithm"),
         "accuracy": MODEL_METADATA.get("accuracy"),
         "auc_roc": MODEL_METADATA.get("auc_roc"),
         "f1_score": MODEL_METADATA.get("f1_score"),
+        "local_ip": local_ip,
+        "suggested_url": f"http://{local_ip}:8000",
     }
 
 
