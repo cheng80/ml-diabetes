@@ -12,9 +12,7 @@ class AppSettingsDrawer extends StatelessWidget {
   static const String _version = '1.0.0';
 
   void _onApiUrlTap(BuildContext context) {
-    final ctrl = TextEditingController(
-      text: AppStorage.getApiBaseUrl() ?? '',
-    );
+    final ctrl = TextEditingController(text: AppStorage.getApiBaseUrl() ?? '');
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -32,9 +30,7 @@ class AppSettingsDrawer extends StatelessWidget {
             const SizedBox(height: 12),
             TextField(
               controller: ctrl,
-              decoration: const InputDecoration(
-                hintText: 'http://...',
-              ),
+              decoration: const InputDecoration(hintText: 'http://...'),
               keyboardType: TextInputType.url,
               autofocus: true,
             ),
@@ -58,7 +54,8 @@ class AppSettingsDrawer extends StatelessWidget {
   }
 
   void _onHospitalSearchTap(BuildContext context) {
-    final hasAddress = AppStorage.getAddress() != null &&
+    final hasAddress =
+        AppStorage.getAddress() != null &&
         AppStorage.getLat() != null &&
         AppStorage.getLng() != null;
 
@@ -120,7 +117,8 @@ class AppSettingsDrawer extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text(
                     '세팅',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style:
+                        Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ) ??
                         const TextStyle(
@@ -161,7 +159,7 @@ class AppSettingsDrawer extends StatelessWidget {
             // 주소 찾기 메뉴
             ListTile(
               leading: const Icon(Icons.location_on_outlined),
-              title: const Text('주소 찾기 (OpenStreetMap)'),
+              title: const Text('주소 찾기 (카카오 주소검색 API)'),
               subtitle: const Text('주소 검색 후 좌표 저장'),
               onTap: () {
                 Navigator.pop(context);
@@ -194,13 +192,11 @@ class AppSettingsDrawer extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Text(
                   _version,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  style:
+                      Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ) ??
-                      TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ),
             ),
