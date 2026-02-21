@@ -47,7 +47,7 @@ dependencies:
   get_storage: ^2.1.1 # GetStorage (GetX와 독립적으로 사용 가능한 스토리지 패키지)
 
   # 카카오(다음) 주소검색 API
-  remedi_kopo: ^0.0.2
+  kpostal: ^1.1.0
 
   # 외부 지도 앱 연동 (길찾기)
   map_launcher: ^3.5.0

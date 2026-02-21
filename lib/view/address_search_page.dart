@@ -2,11 +2,10 @@ import 'dart:convert';
 
 import 'package:diabetes_app/utils/app_storage.dart';
 import 'package:diabetes_app/utils/custom_common_util.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import 'package:remedi_kopo/remedi_kopo.dart';
+import 'package:kpostal/kpostal.dart';
 
 /// 주소 찾기 화면
 ///
@@ -32,6 +31,10 @@ class _AddressSearchPageState extends State<AddressSearchPage> {
   String? _lng;
   bool _geocodeLoading = false;
 
+  /// kpostal 검색 결과 좌표 (있으면 /geocode 호출 생략 → Nominatim 503 회피)
+  double? _lastSearchLat;
+  double? _lastSearchLng;
+
   bool get _canSave => _buildBaseAddress().isNotEmpty;
 
   @override
@@ -44,19 +47,27 @@ class _AddressSearchPageState extends State<AddressSearchPage> {
 
   Future<void> _searchAddress() async {
     try {
-      final KopoModel? model = await Navigator.push(
+      final Kpostal? result = await Navigator.push<Kpostal>(
         context,
-        CupertinoPageRoute(
-          builder: (context) => RemediKopo(),
+        MaterialPageRoute(
+          builder: (context) => KpostalView(),
         ),
       );
 
-      if (model != null && mounted) {
+      if (result != null && mounted) {
         setState(() {
-          _postcodeController.text = model.zonecode ?? '';
-          _addressController.text = model.address ?? '';
-          _addressDetailController.text = model.buildingName ?? '';
+          _postcodeController.text = result.postCode;
+          _addressController.text = result.userSelectedAddress;
+          _addressDetailController.text = result.buildingName;
         });
+        // kpostal 좌표 로드 (비동기 latLng getter)
+        await result.latLng;
+        if (mounted) {
+          setState(() {
+            _lastSearchLat = result.latitude;
+            _lastSearchLng = result.longitude;
+          });
+        }
       }
     } on PlatformException catch (e) {
       if (!mounted) return;
@@ -99,6 +110,16 @@ class _AddressSearchPageState extends State<AddressSearchPage> {
         title: '입력 오류',
         message: '기본주소를 입력해 주세요.',
       );
+      return;
+    }
+
+    // kpostal 좌표가 있으면 서버 호출 생략 (Nominatim 503 회피)
+    if (_lastSearchLat != null && _lastSearchLng != null) {
+      if (!mounted) return;
+      setState(() {
+        _lat = _lastSearchLat!.toString();
+        _lng = _lastSearchLng!.toString();
+      });
       return;
     }
 
@@ -159,32 +180,44 @@ class _AddressSearchPageState extends State<AddressSearchPage> {
     CustomCommonUtil.showLoadingOverlay(context, message: '저장 중...');
 
     try {
-      final baseUrl = CustomCommonUtil.getApiBaseUrlSync();
-      final response = await http.post(
-        Uri.parse('$baseUrl/geocode'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'address': baseAddress}),
-      );
+      String? lat;
+      String? lng;
+
+      // kpostal 좌표가 있으면 서버 호출 생략 (Nominatim 503 회피)
+      if (_lastSearchLat != null && _lastSearchLng != null) {
+        lat = _lastSearchLat!.toString();
+        lng = _lastSearchLng!.toString();
+      } else {
+        final baseUrl = CustomCommonUtil.getApiBaseUrlSync();
+        final response = await http.post(
+          Uri.parse('$baseUrl/geocode'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'address': baseAddress}),
+        );
+
+        if (!mounted) return;
+        CustomCommonUtil.hideLoadingOverlay(context);
+
+        if (response.statusCode == 404) {
+          CustomCommonUtil.showErrorSnackbar(
+            context: context,
+            title: '저장 실패',
+            message: '주소를 찾을 수 없습니다.',
+          );
+          return;
+        }
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception('서버 오류(${response.statusCode})');
+        }
+
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        lat = data['lat'] as String?;
+        lng = data['lng'] as String?;
+      }
 
       if (!mounted) return;
       CustomCommonUtil.hideLoadingOverlay(context);
-
-      if (response.statusCode == 404) {
-        CustomCommonUtil.showErrorSnackbar(
-          context: context,
-          title: '저장 실패',
-          message: '주소를 찾을 수 없습니다.',
-        );
-        return;
-      }
-
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('서버 오류(${response.statusCode})');
-      }
-
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final lat = data['lat'] as String?;
-      final lng = data['lng'] as String?;
 
       if (lat == null || lng == null) {
         CustomCommonUtil.showErrorSnackbar(

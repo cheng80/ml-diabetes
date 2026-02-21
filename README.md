@@ -33,7 +33,7 @@ Flutter + FastAPI 기반의 당뇨 위험도 예측 모바일 앱입니다.
 | 백엔드 | FastAPI (Python) |
 | ML 모델 | scikit-learn (AdaBoost, RandomForest) |
 | 데이터 시각화 | Matplotlib (서버 사이드 차트 생성, Base64 전송) |
-| 주소 검색 | 카카오 주소검색 API (remedi_kopo) |
+| 주소 검색 | 카카오 주소검색 API (kpostal) |
 | 병원 조회 | 공공데이터 건강보험심사평가원 API |
 | 좌표 변환 | Nominatim (geopy) |
 | 지도 연동 | map_launcher |
