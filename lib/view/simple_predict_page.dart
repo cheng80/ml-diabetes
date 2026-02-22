@@ -76,6 +76,7 @@ class _SimplePredictPageState extends State<SimplePredictPage> {
           : null;
 
       final body = {
+        '입력모드': 'simple',
         '나이': _age,
         'BMI': _bmi,
         '임신횟수': (pregRange.$1 + pregRange.$2) / 2.0,

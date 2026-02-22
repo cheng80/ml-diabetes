@@ -1,0 +1,308 @@
+{
+  "scenarios": {
+    "A": {
+      "artifact_name": "a_detail_sugar",
+      "mode": "detailed",
+      "features_eng": [
+        "pregnancies",
+        "glucose",
+        "bmi",
+        "age"
+      ],
+      "features_kor": [
+        "임신횟수",
+        "혈당",
+        "BMI",
+        "나이"
+      ],
+      "winner_model": "LR",
+      "threshold": 0.5000000000000002,
+      "metrics": {
+        "train": {
+          "accuracy": 0.7630434782608696,
+          "precision": 0.7865168539325843,
+          "recall": 0.4375,
+          "f1": 0.5622489959839357
+        },
+        "valid": {
+          "accuracy": 0.8246753246753247,
+          "precision": 0.9090909090909091,
+          "recall": 0.5555555555555556,
+          "f1": 0.6896551724137931
+        },
+        "test": {
+          "accuracy": 0.7402597402597403,
+          "precision": 0.7058823529411765,
+          "recall": 0.4444444444444444,
+          "f1": 0.5454545454545454
+        }
+      },
+      "candidates_valid_accuracy": [
+        {
+          "name": "LR",
+          "score": 0.8246753246753247
+        },
+        {
+          "name": "Voting Ensemble (Top 3 Mix)",
+          "score": 0.8051948051948052
+        },
+        {
+          "name": "RF",
+          "score": 0.7987012987012987
+        },
+        {
+          "name": "Ada",
+          "score": 0.7922077922077922
+        },
+        {
+          "name": "GB",
+          "score": 0.7857142857142857
+        },
+        {
+          "name": "DT",
+          "score": 0.7857142857142857
+        },
+        {
+          "name": "SVM",
+          "score": 0.7792207792207793
+        },
+        {
+          "name": "MLP",
+          "score": 0.7727272727272727
+        },
+        {
+          "name": "KNN",
+          "score": 0.7662337662337663
+        }
+      ]
+    },
+    "B": {
+      "artifact_name": "b_detail_no_sugar",
+      "mode": "detailed",
+      "features_eng": [
+        "pregnancies",
+        "bmi",
+        "age"
+      ],
+      "features_kor": [
+        "임신횟수",
+        "BMI",
+        "나이"
+      ],
+      "winner_model": "SVM",
+      "threshold": 0.36000000000000004,
+      "metrics": {
+        "train": {
+          "accuracy": 0.7217391304347827,
+          "precision": 0.6038961038961039,
+          "recall": 0.58125,
+          "f1": 0.5923566878980892
+        },
+        "valid": {
+          "accuracy": 0.7337662337662337,
+          "precision": 0.6140350877192983,
+          "recall": 0.6481481481481481,
+          "f1": 0.6306306306306306
+        },
+        "test": {
+          "accuracy": 0.6753246753246753,
+          "precision": 0.54,
+          "recall": 0.5,
+          "f1": 0.5192307692307693
+        }
+      },
+      "candidates_valid_accuracy": [
+        {
+          "name": "SVM",
+          "score": 0.7272727272727273
+        },
+        {
+          "name": "MLP",
+          "score": 0.7272727272727273
+        },
+        {
+          "name": "DT",
+          "score": 0.7272727272727273
+        },
+        {
+          "name": "KNN",
+          "score": 0.7142857142857143
+        },
+        {
+          "name": "RF",
+          "score": 0.7142857142857143
+        },
+        {
+          "name": "LR",
+          "score": 0.7012987012987013
+        },
+        {
+          "name": "GB",
+          "score": 0.7012987012987013
+        },
+        {
+          "name": "Voting Ensemble (Top 3 Mix)",
+          "score": 0.6948051948051948
+        },
+        {
+          "name": "Ada",
+          "score": 0.6363636363636364
+        }
+      ]
+    },
+    "C": {
+      "artifact_name": "c_simple_sugar",
+      "mode": "simple",
+      "features_eng": [
+        "pregnancies",
+        "glucose",
+        "bmi",
+        "age"
+      ],
+      "features_kor": [
+        "임신횟수",
+        "혈당",
+        "BMI",
+        "나이"
+      ],
+      "winner_model": "Voting Ensemble (Top 3 Mix)",
+      "threshold": 0.48000000000000015,
+      "metrics": {
+        "train": {
+          "accuracy": 0.7673913043478261,
+          "precision": 0.7226890756302521,
+          "recall": 0.5375,
+          "f1": 0.6164874551971327
+        },
+        "valid": {
+          "accuracy": 0.8246753246753247,
+          "precision": 0.8292682926829268,
+          "recall": 0.6296296296296297,
+          "f1": 0.7157894736842105
+        },
+        "test": {
+          "accuracy": 0.7272727272727273,
+          "precision": 0.6363636363636364,
+          "recall": 0.5185185185185185,
+          "f1": 0.5714285714285714
+        }
+      },
+      "candidates_valid_accuracy": [
+        {
+          "name": "Voting Ensemble (Top 3 Mix)",
+          "score": 0.8116883116883117
+        },
+        {
+          "name": "Ada",
+          "score": 0.8051948051948052
+        },
+        {
+          "name": "DT",
+          "score": 0.8051948051948052
+        },
+        {
+          "name": "RF",
+          "score": 0.7987012987012987
+        },
+        {
+          "name": "GB",
+          "score": 0.7987012987012987
+        },
+        {
+          "name": "LR",
+          "score": 0.7857142857142857
+        },
+        {
+          "name": "KNN",
+          "score": 0.7857142857142857
+        },
+        {
+          "name": "SVM",
+          "score": 0.7662337662337663
+        },
+        {
+          "name": "MLP",
+          "score": 0.7662337662337663
+        }
+      ]
+    },
+    "C_NS": {
+      "artifact_name": "cns_simple_no_sugar",
+      "mode": "simple",
+      "features_eng": [
+        "pregnancies",
+        "bmi",
+        "age"
+      ],
+      "features_kor": [
+        "임신횟수",
+        "BMI",
+        "나이"
+      ],
+      "winner_model": "Voting Ensemble (Top 3 Mix)",
+      "threshold": 0.38000000000000006,
+      "metrics": {
+        "train": {
+          "accuracy": 0.7043478260869566,
+          "precision": 0.572289156626506,
+          "recall": 0.59375,
+          "f1": 0.5828220858895705
+        },
+        "valid": {
+          "accuracy": 0.7467532467532467,
+          "precision": 0.6153846153846154,
+          "recall": 0.7407407407407407,
+          "f1": 0.6722689075630253
+        },
+        "test": {
+          "accuracy": 0.6818181818181818,
+          "precision": 0.5396825396825397,
+          "recall": 0.6296296296296297,
+          "f1": 0.5811965811965812
+        }
+      },
+      "candidates_valid_accuracy": [
+        {
+          "name": "Voting Ensemble (Top 3 Mix)",
+          "score": 0.7402597402597403
+        },
+        {
+          "name": "KNN",
+          "score": 0.7272727272727273
+        },
+        {
+          "name": "Ada",
+          "score": 0.7272727272727273
+        },
+        {
+          "name": "GB",
+          "score": 0.7142857142857143
+        },
+        {
+          "name": "SVM",
+          "score": 0.7142857142857143
+        },
+        {
+          "name": "LR",
+          "score": 0.7012987012987013
+        },
+        {
+          "name": "MLP",
+          "score": 0.7012987012987013
+        },
+        {
+          "name": "RF",
+          "score": 0.6948051948051948
+        },
+        {
+          "name": "DT",
+          "score": 0.6948051948051948
+        }
+      ]
+    }
+  },
+  "compat": {
+    "model_sugar.joblib": "A",
+    "model_no_sugar.joblib": "B"
+  }
+}

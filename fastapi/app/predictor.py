@@ -7,17 +7,35 @@ import io
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from fastapi import HTTPException
+from sklearn.impute import KNNImputer
+from sklearn.preprocessing import StandardScaler
 
 from app.model_loader import (
-    ALIAS_TO_ENG,
+    CLIP_BOUNDS_DETAIL_NO_SUGAR,
+    CLIP_BOUNDS_DETAIL_SUGAR,
     FEATURE_LABELS,
     FEATURE_RANGES,
-    FEATURES_NO_SUGAR,
-    FEATURES_SUGAR,
+    FEATURES_DETAIL_NO_SUGAR,
+    FEATURES_DETAIL_SUGAR,
+    FEATURES_SIMPLE_NO_SUGAR,
+    FEATURES_SIMPLE_SUGAR,
+    IMPUTER_DETAIL_NO_SUGAR,
+    IMPUTER_DETAIL_SUGAR,
+    MODEL_DETAIL_NO_SUGAR,
+    MODEL_DETAIL_SUGAR,
     MODEL_NO_SUGAR,
+    MODEL_SIMPLE_NO_SUGAR,
+    MODEL_SIMPLE_SUGAR,
     MODEL_SUGAR,
+    QUANTILES_SIMPLE_NO_SUGAR,
+    QUANTILES_SIMPLE_SUGAR,
+    SCALER_DETAIL_NO_SUGAR,
+    SCALER_DETAIL_SUGAR,
+    get_scenario_threshold,
     standardize,
+    to_simple_grade,
 )
 from app.schemas import PredictRequest, PredictResponse
 
@@ -110,7 +128,7 @@ def create_chart_base64(
 
 
 def predict_with_model(payload: PredictRequest) -> PredictResponse:
-    """혈당 유무에 따라 모델을 분기하여 예측"""
+    """입력모드(detail/simple) + 혈당 유무에 따라 모델 분기 예측"""
 
     # 입력값 수집 (영문 키 기준)
     raw_input: dict[str, float | None] = {
@@ -136,37 +154,99 @@ def predict_with_model(payload: PredictRequest) -> PredictResponse:
                     detail=f"{label}({key}) 값은 {min_v} ~ {max_v} 범위여야 합니다.",
                 )
 
-    # 혈당 포함 여부에 따라 모델 분기
+    # 혈당 포함 여부 + 입력 모드에 따라 모델 분기
     has_glucose = "glucose" in user_provided
-    if has_glucose:
-        model = MODEL_SUGAR
-        feature_names = FEATURES_SUGAR
-        used_model_name = "AdaBoost (혈당 포함)"
-    else:
-        model = MODEL_NO_SUGAR
-        feature_names = FEATURES_NO_SUGAR
-        used_model_name = "RandomForest (혈당 미포함)"
+    mode = (payload.input_mode or "detail").lower().strip()
+    if mode not in ("detail", "simple"):
+        raise HTTPException(status_code=400, detail="입력모드는 detail 또는 simple 이어야 합니다.")
 
     # 피처에 해당하는 값이 최소 1개는 있어야 함
-    active_count = sum(1 for k in feature_names if k in user_provided)
-    if active_count == 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"현재 모델에서 사용하는 항목이 입력되지 않았습니다. "
-                   f"필요 항목: {', '.join(feature_names)}",
-        )
+    if mode == "simple":
+        if has_glucose:
+            feature_names = FEATURES_SIMPLE_SUGAR
+            model = MODEL_SIMPLE_SUGAR or MODEL_SUGAR
+            quantiles = QUANTILES_SIMPLE_SUGAR
+            used_model_name = "Scenario C (간편/등급형, 혈당 포함)"
+            threshold = get_scenario_threshold("C")
+        else:
+            feature_names = FEATURES_SIMPLE_NO_SUGAR
+            model = MODEL_SIMPLE_NO_SUGAR or MODEL_NO_SUGAR
+            quantiles = QUANTILES_SIMPLE_NO_SUGAR
+            used_model_name = "Scenario C-NS (간편/등급형, 혈당 미포함)"
+            threshold = get_scenario_threshold("C_NS")
 
-    # 원본 수치 -> StandardScaler 표준화 (학습 시 파이프라인과 동일)
-    x_values = [
-        standardize(f, user_provided.get(f, 0.0))
-        for f in feature_names
-    ]
-    X = np.array([x_values])
+        active_count = sum(1 for k in feature_names if k in user_provided)
+        if active_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"현재 모델에서 사용하는 항목이 입력되지 않았습니다. 필요 항목: {', '.join(feature_names)}",
+            )
+
+        # quantiles가 있으면 노트북 방식(등급화) 적용, 없으면 fallback
+        if quantiles:
+            row = {
+                FEATURE_LABELS[f]: float(
+                    to_simple_grade(f, user_provided.get(f, 0.0), quantiles)
+                )
+                for f in feature_names
+            }
+            X = pd.DataFrame([row])
+        else:
+            x_values = [standardize(f, user_provided.get(f, 0.0)) for f in feature_names]
+            X = np.array([x_values], dtype=float)
+    else:
+        if has_glucose:
+            feature_names = FEATURES_DETAIL_SUGAR
+            model = MODEL_DETAIL_SUGAR or MODEL_SUGAR
+            scaler = SCALER_DETAIL_SUGAR
+            imputer = IMPUTER_DETAIL_SUGAR
+            used_model_name = "Scenario A (상세/수치형, 혈당 포함)"
+            clip_bounds = CLIP_BOUNDS_DETAIL_SUGAR
+            threshold = get_scenario_threshold("A")
+        else:
+            feature_names = FEATURES_DETAIL_NO_SUGAR
+            model = MODEL_DETAIL_NO_SUGAR or MODEL_NO_SUGAR
+            scaler = SCALER_DETAIL_NO_SUGAR
+            imputer = IMPUTER_DETAIL_NO_SUGAR
+            used_model_name = "Scenario B (상세/수치형, 혈당 미포함)"
+            clip_bounds = CLIP_BOUNDS_DETAIL_NO_SUGAR
+            threshold = get_scenario_threshold("B")
+
+        active_count = sum(1 for k in feature_names if k in user_provided)
+        if active_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"현재 모델에서 사용하는 항목이 입력되지 않았습니다. 필요 항목: {', '.join(feature_names)}",
+            )
+
+        # 신규 상세 모델 전처리(Scaler + Imputer)가 존재하면 우선 사용
+        if isinstance(scaler, StandardScaler) and isinstance(imputer, KNNImputer):
+            raw_row = []
+            for f in feature_names:
+                v = user_provided.get(f)
+                if v is None or float(v) == 0.0:
+                    raw_row.append(np.nan)
+                else:
+                    raw_row.append(float(v))
+            cols_kor = [FEATURE_LABELS[f] for f in feature_names]
+            x_raw = pd.DataFrame([raw_row], columns=cols_kor)
+            if isinstance(clip_bounds, dict):
+                for c in cols_kor:
+                    if c in clip_bounds:
+                        low, up = clip_bounds[c]
+                        x_raw[c] = x_raw[c].clip(low, up)
+            x_scaled = scaler.transform(x_raw)
+            X = imputer.transform(x_scaled)
+        else:
+            # legacy fallback
+            x_values = [standardize(f, user_provided.get(f, 0.0)) for f in feature_names]
+            X = np.array([x_values], dtype=float)
+            threshold = 0.5
 
     # 예측
     proba = model.predict_proba(X)[0]
     probability = float(proba[1])
-    prediction = int(probability >= 0.5)
+    prediction = int(probability >= threshold)
     label = "당뇨 위험" if prediction == 1 else "정상 범위"
 
     # 차트 생성

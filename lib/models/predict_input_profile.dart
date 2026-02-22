@@ -55,4 +55,8 @@ class PredictInputProfile {
   Future<void> save() async {
     await GetStorage().write(storageKey, toJson());
   }
+
+  static Future<void> clear() async {
+    await GetStorage().remove(storageKey);
+  }
 }

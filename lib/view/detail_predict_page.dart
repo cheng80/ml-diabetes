@@ -100,7 +100,7 @@ class _DetailPredictPageState extends State<DetailPredictPage> {
     try {
       final url = '${CustomCommonUtil.getApiBaseUrlSync()}/predict';
 
-      final body = {'나이': _age, 'BMI': _bmi, '임신횟수': _pregVal};
+      final body = {'입력모드': 'detail', '나이': _age, 'BMI': _bmi, '임신횟수': _pregVal};
 
       if (_sugarCtrl.text.trim().isNotEmpty) {
         body['혈당'] = int.parse(_sugarCtrl.text.trim());
@@ -265,10 +265,14 @@ class _DetailPredictPageState extends State<DetailPredictPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.all(20),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 24,
           children: [
@@ -378,6 +382,7 @@ class _DetailPredictPageState extends State<DetailPredictPage> {
               child: const Text('예측하기'),
             ),
           ],
+          ),
         ),
       ),
     );

@@ -31,7 +31,7 @@ Flutter + FastAPI 기반의 당뇨 위험도 예측 모바일 앱입니다.
 |------|------|
 | 프론트엔드 | Flutter (Dart), Material Design 3 |
 | 백엔드 | FastAPI (Python) |
-| ML 모델 | scikit-learn (AdaBoost, RandomForest) |
+| ML 모델 | scikit-learn (LR, SVM, Voting Ensemble) |
 | 데이터 시각화 | Matplotlib (서버 사이드 차트 생성, Base64 전송) |
 | 주소 검색 | 카카오 주소검색 API (kpostal) |
 | 병원 조회 | 공공데이터 건강보험심사평가원 API |
@@ -54,8 +54,9 @@ diabetes_app/
 │   │   ├── detail_predict_page.dart       # 상세 예측 화면
 │   │   ├── hospital_search_page.dart      # 병원 검색 + 길찾기
 │   │   └── address_search_page.dart       # 주소 검색 + 좌표 변환
-│   ├── model/
-│   │   └── hospital.dart                  # 병원 데이터 모델
+│   ├── models/
+│   │   ├── hospital.dart                  # 병원 데이터 모델
+│   │   └── predict_input_profile.dart     # 예측 입력 프로필 모델
 │   ├── widgets/
 │   │   ├── app_settings_drawer.dart       # 설정 드로어 (테마, API URL)
 │   │   ├── age_picker.dart                # 나이 선택 (Cupertino 휠)
@@ -79,13 +80,17 @@ diabetes_app/
 │   │   ├── main.py                        # FastAPI 앱 (엔드포인트 정의)
 │   │   ├── schemas.py                     # Pydantic 요청/응답 스키마
 │   │   ├── predictor.py                   # 예측 로직 + 차트 생성
-│   │   ├── model_loader.py                # 모델 로드 + StandardScaler 전처리
+│   │   ├── model_loader.py                # 4시나리오 모델/전처리 로더
 │   │   ├── geocoding.py                   # 주소 → 좌표 변환
-│   │   ├── model_sugar.joblib             # 혈당 포함 모델 (AdaBoost)
-│   │   └── model_no_sugar.joblib          # 혈당 미포함 모델 (RandomForest)
+│   │   ├── model_sugar.joblib             # 런타임 호환 모델 (Scenario A)
+│   │   ├── model_no_sugar.joblib          # 런타임 호환 모델 (Scenario B)
+│   │   ├── a_detail_sugar_model.joblib    # A: 상세/수치형(혈당 포함)
+│   │   ├── b_detail_no_sugar_model.joblib # B: 상세/수치형(혈당 미포함)
+│   │   ├── c_simple_sugar_model.joblib    # C: 심플/등급형(혈당 포함)
+│   │   └── cns_simple_no_sugar_model.joblib # C-NS: 심플/등급형(혈당 미포함)
 │   ├── requirements.txt
 │   ├── APIGUIDE.md                        # API 명세 문서
-│   └── MODEL_FIX_REPORT.md               # 모델 수정 보고서
+│   └── scripts/                            # 학습/검증 스크립트
 │
 ├── android/                               # Android 플랫폼
 ├── ios/                                   # iOS 플랫폼
@@ -132,15 +137,16 @@ flutter run
 
 ## ML 모델
 
-Pima Indians Diabetes Dataset(당뇨.csv)을 기반으로 학습한 두 가지 모델을 사용합니다.
+Pima Indians Diabetes Dataset(당뇨.csv)을 기반으로 학습한 4개 시나리오 모델을 사용합니다.
 
 | 시나리오 | 모델 | 입력 피처 | Test Accuracy |
 |----------|------|-----------|---------------|
-| 혈당 포함 | AdaBoost | 혈당, BMI, 나이, 임신횟수 | 0.81 |
-| 혈당 미포함 | RandomForest | BMI, 나이, 임신횟수 | 0.71 |
+| A (상세/혈당 포함) | LogisticRegression | 임신횟수, 혈당, BMI, 나이 | 0.7403 |
+| B (상세/혈당 미포함) | SVC | 임신횟수, BMI, 나이 | 0.6753 |
+| C (심플/혈당 포함) | Voting Ensemble (Top 3 Mix) | 임신횟수, 혈당, BMI, 나이 | 0.7273 |
+| C-NS (심플/혈당 미포함) | Voting Ensemble (Top 3 Mix) | 임신횟수, BMI, 나이 | 0.6818 |
 
-API에서 사용자 입력(원본 수치)을 받으면 학습 시와 동일한 StandardScaler 표준화를 적용한 뒤 모델에 전달합니다.  
-모델 수정 이력과 전처리 파이프라인 상세는 [MODEL_FIX_REPORT.md](fastapi/MODEL_FIX_REPORT.md)를 참고하세요.
+API는 `입력모드(detail/simple)` + 혈당 입력 유무로 A/B/C/C-NS를 분기하며, 시나리오별 전처리(IQR clipping, scaler/imputer, 등급화)와 임계값을 적용합니다.
 
 ---
 

@@ -23,7 +23,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ## 📡 API 엔드포인트 명세
 
 ### 1. 상태 및 정보 확인 (Health Check)
-서버의 현재 상태 및 서빙 중인 머신러닝 모델의 기본 메타데이터를 반환합니다. 실기기 연결을 위해 서버의 Local IP 주소도 함께 안내합니다.
+서버 상태와 실기기 연결용 로컬 IP 정보를 반환합니다.
 
 - **URL**: `/health`
 - **Method**: `GET`
@@ -31,8 +31,8 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```json
 {
   "status": "ok",
-  "model_sugar": "AdaBoostClassifier (혈당 포함, Acc 0.81)",
-  "model_no_sugar": "RandomForestClassifier (혈당 미포함, Acc 0.71)",
+  "model_sugar": "RandomForest (혈당 포함: 혈당, BMI, 나이, 임신횟수)",
+  "model_no_sugar": "RandomForest (혈당 미포함: BMI, 나이, 임신횟수)",
   "local_ip": "192.168.0.15",
   "suggested_url": "http://192.168.0.15:8000"
 }
@@ -42,19 +42,31 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### 2. 당뇨 예측 요청 (Predict)
 입력받은 사용자 데이터를 바탕으로 당뇨 위험도 확률 및 차트 이미지를 반환합니다.
-- 영문 키(`age`, `bmi`)와 한글 키(`나이`, `BMI`) **모두 사용 가능**합니다. (Pydantic의 `populate_by_name` 활용)
+- 한글 키(`나이`, `BMI`, `임신횟수`, `혈당`)를 사용합니다.
+- `입력모드`로 상세/심플 시나리오를 구분합니다.
 
 - **URL**: `/predict`
 - **Method**: `POST`
 - **요청 본문 (JSON)**: 최소 1개 이상의 데이터가 포함되어야 합니다.
 ```json
 {
+  "입력모드": "detail",
   "나이": 45,
   "BMI": 28.5,
   "임신횟수": 2.0,
   "혈당": 140.0
 }
 ```
+
+- **입력모드 규칙**
+  - `detail`: 상세(수치형) 예측
+  - `simple`: 간편(등급형) 예측
+
+- **시나리오 분기**
+  - `detail` + 혈당 포함 -> Scenario A
+  - `detail` + 혈당 미포함 -> Scenario B
+  - `simple` + 혈당 포함 -> Scenario C
+  - `simple` + 혈당 미포함 -> Scenario C-NS
 
 - **응답 본문 (200 OK)**:
 ```json
@@ -68,14 +80,14 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     "pregnancies": 6.0,
     "glucose": 148.0
   },
-  "used_model": "AdaBoost (혈당 포함)",
+  "used_model": "Scenario A (상세/수치형, 혈당 포함)",
   "chart_image_base64": "iVBORw0KGgoAAAANSUhEUgAA..." 
 }
 ```
 > `chart_image_base64`: Flutter 측에서 `Image.memory(base64Decode(chart_image_base64))` 형태로 즉시 렌더링 가능한 모델 차트 이미지(PNG) 데이터입니다.
 
 - **에러 응답**:
-  - `400 Bad Request`: 입력값이 전혀 없거나, 값이 허용 범위를 초과한 경우.
+  - `400 Bad Request`: 입력값 누락/입력모드 오류/허용 범위 초과
 
 ---
 
@@ -101,7 +113,8 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 - **에러 응답**:
-  - `404 Not Found`: 해당 주소에 대한 좌표를 찾지 못했거나 타임아웃이 발생한 경우.
+  - `404 Not Found`: 해당 주소를 찾지 못한 경우
+  - `503 Service Unavailable`: 지오코딩 서비스 응답 지연
 
 ---
 
@@ -116,7 +129,11 @@ fastapi/
     ├── schemas.py         # Pydantic을 활용한 입출력 데이터 타입 정의
     ├── predictor.py       # 머신러닝 예측 로직 + Matplotlib 차트 생성 기능
     ├── geocoding.py       # Nominatim 주소 검색 로직
-    ├── model_loader.py    # joblib 모델 로드 + StandardScaler 전처리 함수
-    ├── model_sugar.joblib # 혈당 포함 모델 (AdaBoost, Acc 0.81)
-    └── model_no_sugar.joblib # 혈당 제외 모델 (RandomForest, Acc 0.71)
+    ├── model_loader.py    # A/B/C/C-NS 모델 + 전처리 아티팩트 로더
+    ├── model_sugar.joblib # 런타임 호환 모델 (Scenario A)
+    ├── model_no_sugar.joblib # 런타임 호환 모델 (Scenario B)
+    ├── a_detail_sugar_model.joblib
+    ├── b_detail_no_sugar_model.joblib
+    ├── c_simple_sugar_model.joblib
+    └── cns_simple_no_sugar_model.joblib
 ```

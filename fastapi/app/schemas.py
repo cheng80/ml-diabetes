@@ -10,6 +10,7 @@ class PredictRequest(BaseModel):
     glucose: float | None = Field(None, alias="혈당")
     bmi: float | None = Field(None, alias="BMI")
     age: float | None = Field(None, alias="나이")
+    input_mode: str | None = Field(None, alias="입력모드")
 
     model_config = ConfigDict(populate_by_name=True)
 

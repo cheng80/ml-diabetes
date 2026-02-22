@@ -1,0 +1,41 @@
+{
+  "passed_all": true,
+  "results": {
+    "A": {
+      "train_accuracy": 0.7608695652173914,
+      "test_accuracy": 0.7402597402597403,
+      "test_precision": 0.7058823529411765,
+      "test_recall": 0.4444444444444444,
+      "test_f1": 0.5454545454545454,
+      "pass_accuracy_threshold": 0.7,
+      "passed": true
+    },
+    "B": {
+      "train_accuracy": 0.7217391304347827,
+      "test_accuracy": 0.6753246753246753,
+      "test_precision": 0.54,
+      "test_recall": 0.5,
+      "test_f1": 0.5192307692307693,
+      "pass_accuracy_threshold": 0.65,
+      "passed": true
+    },
+    "C": {
+      "train_accuracy": 0.7630434782608696,
+      "test_accuracy": 0.7272727272727273,
+      "test_precision": 0.6363636363636364,
+      "test_recall": 0.5185185185185185,
+      "test_f1": 0.5714285714285714,
+      "pass_accuracy_threshold": 0.7,
+      "passed": true
+    },
+    "C_NS": {
+      "train_accuracy": 0.7086956521739131,
+      "test_accuracy": 0.6818181818181818,
+      "test_precision": 0.5396825396825397,
+      "test_recall": 0.6296296296296297,
+      "test_f1": 0.5811965811965812,
+      "pass_accuracy_threshold": 0.65,
+      "passed": true
+    }
+  }
+}
