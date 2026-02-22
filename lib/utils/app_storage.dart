@@ -22,6 +22,9 @@ class AppStorage {
   // static String? getExample() => _storage.read<String>(_keyExample);
   // static Future<void> saveExample(String value) => _storage.write(_keyExample, value);
 
+  /// GetStorage 인스턴스 (listenKey 등 직접 접근 시)
+  static GetStorage get rawStorage => _storage;
+
   // ─── 테마 ─────────────────────────────────────
   static const String _keyThemeMode = 'theme_mode';
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:charset/charset.dart';
 import 'package:diabetes_app/config.dart';
-import 'package:diabetes_app/model/hospital.dart';
+import 'package:diabetes_app/models/hospital.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
@@ -11,11 +11,7 @@ import 'package:xml/xml.dart';
 
 /// 저장된 위치(lat, lng) 기준으로 주변 병원 목록을 조회하는 화면
 class HospitalSearchPage extends StatefulWidget {
-  const HospitalSearchPage({
-    super.key,
-    required this.lat,
-    required this.lng,
-  });
+  const HospitalSearchPage({super.key, required this.lat, required this.lng});
 
   final double lat;
   final double lng;
@@ -134,9 +130,9 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
   Future<void> _openDirections(Hospital hospital) async {
     if (hospital.lat == null || hospital.lng == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('해당 병원의 위치 정보가 없습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('해당 병원의 위치 정보가 없습니다.')));
       }
       return;
     }
@@ -145,9 +141,9 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
 
     if (availableMaps.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('설치된 지도 앱이 없습니다.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('설치된 지도 앱이 없습니다.')));
       }
       return;
     }
@@ -169,18 +165,14 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
                 child: Text(
                   '길찾기 앱 선택',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const Divider(height: 1),
               ...availableMaps.map((map) {
                 return ListTile(
-                  leading: SvgPicture.asset(
-                    map.icon,
-                    width: 32,
-                    height: 32,
-                  ),
+                  leading: SvgPicture.asset(map.icon, width: 32, height: 32),
                   title: Text(map.mapName),
                   onTap: () {
                     Navigator.pop(context);
@@ -225,60 +217,59 @@ class _HospitalSearchPageState extends State<HospitalSearchPage> {
               ),
             )
           : _hospitals.isEmpty
-              ? const Center(child: Text('주변에 검색된 병원이 없습니다.'))
-              : ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _hospitals.length + (_hasMoreData ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == _hospitals.length) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
+          ? const Center(child: Text('주변에 검색된 병원이 없습니다.'))
+          : ListView.builder(
+              controller: _scrollController,
+              itemCount: _hospitals.length + (_hasMoreData ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _hospitals.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-                    final hospital = _hospitals[index];
-                    final typeFirst =
-                        hospital.type.isNotEmpty ? hospital.type[0] : '?';
+                final hospital = _hospitals[index];
+                final typeFirst = hospital.type.isNotEmpty
+                    ? hospital.type[0]
+                    : '?';
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(typeFirst),
-                        ),
-                        title: Text(
-                          hospital.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text('거리: ${hospital.distance} km'),
-                            Text('주소: ${hospital.address}'),
-                            Text('전화: ${hospital.tel}'),
-                          ],
-                        ),
-                        trailing: hospital.lat != null && hospital.lng != null
-                            ? IconButton(
-                                icon: const Icon(
-                                  Icons.directions,
-                                  size: 36,
-                                  color: Colors.blue,
-                                ),
-                                tooltip: '길찾기',
-                                onPressed: () => _openDirections(hospital),
-                              )
-                            : null,
-                        isThreeLine: true,
-                      ),
-                    );
-                  },
-                ),
+                return Card(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: ListTile(
+                    leading: CircleAvatar(child: Text(typeFirst)),
+                    title: Text(
+                      hospital.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text('거리: ${hospital.distance} km'),
+                        Text('주소: ${hospital.address}'),
+                        Text('전화: ${hospital.tel}'),
+                      ],
+                    ),
+                    trailing: hospital.lat != null && hospital.lng != null
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.directions,
+                              size: 36,
+                              color: Colors.blue,
+                            ),
+                            tooltip: '길찾기',
+                            onPressed: () => _openDirections(hospital),
+                          )
+                        : null,
+                    isThreeLine: true,
+                  ),
+                );
+              },
+            ),
     );
   }
 }
